@@ -1,6 +1,6 @@
 #+TITLE: Emacs-Base configuration
 
-The goal of this repo is to provide a centrelized and fully reproducible environment for my tutorials in Org Mode.
+The goal of this repo is to provide a centralized and fully reproducible environment for my tutorials in Org Mode.
 
 * Install necessary fonts
 

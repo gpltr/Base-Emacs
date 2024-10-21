@@ -66,7 +66,7 @@ Let Emacs run and install the necessary modules.
 Some warnings will be shown, but once it finishes, you can close it and rerun it with the same command. Warnings should not appear after this.
 Your Emacs will look something like this:
 
-[IMAGE OF EMACS]
+[[file:img/README.png]]
 
 If you still have warnings after relaunching Emacs or it does not look like the screenshot, go to the [[id:1D7E522F-61EE-4B5D-9D4C-05EE6F10A173][Troubleshoot]] section.
 

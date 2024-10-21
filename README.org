@@ -1,0 +1,100 @@
+#+TITLE: Emacs-Base configuration
+
+The goal of this repo is to provide a centrelized and fully reproducible environment for my tutorials in Org Mode.
+
+* Install necessary fonts
+
+For our base configuration, I use two fonts:
+ - JetBrains Mono :: for fixed-pitch text
+ - Iosevka Aile :: for variable-pitch text
+
+I also use Nerd Font in the configuration, so the extensions should be installed:
+
+** On macOS
+
+#+begin_src sh
+  brew install --cask font-iosevka-aile
+  brew install --cask font-jetbrains-mono
+  brew install --cask font-jetbrains-mono-nerd-font
+#+end_src
+
+** On Ubuntu
+
+#+begin_src sh
+  # sudo apt-get install unzip # if needed
+
+  mkdir -p ~/.local/share/fonts
+  cd ~/.local/share/fonts
+
+  # Iosevka
+  curl -OL https://github.com/be5invis/Iosevka/releases/download/v31.6.1/PkgTTC-IosevkaAile-31.6.1.zip && unzip PkgTTC-IosevkaAile-31.6.1.zip
+  # JetBrains Mono (not sure if needed)
+  curl -OL https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip && unzip JetBrainsMono.zip
+  # JetBrains Nerd font
+  curl -OL https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip && unzip JetBrainsMono.zip
+
+  # remove unnecessary files
+  rm *.zip
+#+end_src
+
+* Install Emacs
+
+To run the Org mode file, you need to have Emacs installed.
+
+** On macOS
+
+#+begin_src sh
+  brew install --cask emacs
+#+end_src
+
+** On Ubuntu
+
+#+begin_src sh
+  sudo apt-get install emacs
+#+end_src
+
+* Setup Emacs
+
+To run a simple but batteries-included Emacs, you need to launch Emacs using the configuration in this repo's ~emacs.d~.
+
+#+begin_src sh
+  cd $THIS_DIRECTORY
+  emacs --init-directory emacs.d
+#+end_src
+
+Let Emacs run and install the necessary modules.
+Some warnings will be shown, but once it finishes, you can close it and rerun it with the same command. Warnings should not appear after this.
+Your Emacs will look something like this:
+
+[IMAGE OF EMACS]
+
+If you still have warnings after relaunching Emacs or it does not look like the screenshot, go to the [[id:1D7E522F-61EE-4B5D-9D4C-05EE6F10A173][Troubleshoot]] section.
+
+* Optional: Switch [Caps Lock] and [Ctrl]
+
+In Emacs, most shortcuts use the ~[Ctrl]~ key. Unfortunately, its position is not ideal on modern computers, so to reduce finger stress, you can switch the ~[Ctrl]~ and ~[Caps Lock]~ system-wide.
+
+** On macOS
+
+#+begin_src
+  - Click on Apple Menu
+  - Click System Preferences
+  - Click Keyboard
+  - In the Keyboard tab, click the Modifier Keys button in the lower right of the control panel
+  - Set your Caps Lock to Control and Control to Caps Lock
+#+end_src
+
+** On Ubuntu
+
+#+begin_src
+  - Install gnome-tweak-tool and open it
+  - Click Keyboard & Mouse
+  - Click Keyboard
+  - Click Additional Layout Options
+  - Set Ctrl position to Swap Ctrl and Caps Lock
+#+end_src
+
+* Troubleshoot
+:PROPERTIES:
+:ID:       1D7E522F-61EE-4B5D-9D4C-05EE6F10A173
+:END:

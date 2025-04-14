@@ -22,7 +22,7 @@
   (setq insert-directory-program "gls")
   (use-package exec-path-from-shell
     :ensure t
-    :init
+    :config
     (exec-path-from-shell-initialize))
   ;; Simulate CUA mode on Mac
   (keymap-global-set "M-c" 'kill-ring-save)
@@ -34,11 +34,6 @@
   (setq cua-auto-tabify-rectangles nil)
   (cua-mode t)
   (transient-mark-mode 1))
-
-;; Not needed if Emacs is in version 30+
-(unless (package-installed-p 'vc-use-package)
-    (package-vc-install "https://github.com/slotThe/vc-use-package"))
-(require 'vc-use-package)
 
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
@@ -68,23 +63,29 @@
 (dolist (mode '(org-mode-hook latex-mode-hook LaTeX-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+(add-to-list 'display-buffer-alist
+           '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+             (display-buffer-no-window)
+             (allow-no-window . t)))
+
 ;; Highlight the current line
 (add-hook 'prog-mode-hook #'hl-line-mode)
 (add-hook 'text-mode-hook #'hl-line-mode)
 
 ;; Screenshots: https://github.com/doomemacs/themes/blob/screenshots/
-(use-package doom-themes
- :ensure t
- :config
- ;; Global settings (defaults)
- (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-       doom-themes-enable-italic t) ; if nil, italics is universally disabled
- (load-theme 'doom-one t)
+ (use-package doom-themes
+  ;; :vc (:url "https://github.com/doomemacs/themes" :branch "master")
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
 
- ;; Enable flashing mode-line on errors
- (doom-themes-visual-bell-config)
- ;; Corrects (and improves) org-mode's native fontification.
- (doom-themes-org-config))
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 (use-package doom-modeline
   :ensure t
@@ -117,11 +118,14 @@
       `((".*" ,user-temporary-file-directory t)))
 (setq create-lockfiles nil)
 
-(use-package undo-tree
+(use-package vundo
   :ensure t
-  :init
-  (setq undo-tree-history-directory-alist `(("." . ,(expand-file-name "undo" user-emacs-directory))))
-  (global-undo-tree-mode))
+  :bind
+  (("C-x u" . vundo))
+  :custom
+  (vundo-glyph-alist vundo-unicode-symbols)
+  :config
+  (set-face-attribute 'vundo-default nil :family "Symbola"))
 
 (use-package savehist
   :custom
@@ -220,7 +224,7 @@
 
 ;; Sleek look
 (use-package org-modern-indent
-  :vc (:fetcher github :repo jdtsmith/org-modern-indent)
+  :vc (:url "https://github.com/jdtsmith/org-modern-indent" :branch "main")
   :ensure t
   :config
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
@@ -254,3 +258,9 @@
   (org-tag ((t (:inherit 'fixed-pitch)))))
 
 (use-package gnuplot :ensure t)
+
+(use-package ox-gfm
+  :ensure t
+  :init
+  (with-eval-after-load 'org
+    '(require 'ox-gfm nil t)))

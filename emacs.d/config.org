@@ -65,6 +65,9 @@ CUA-mode allows one to use =C-v=, =C-c=, and =C-x= to paste, copy, and cut the r
 ** Package
 
 #+begin_src emacs-lisp
+  ;; Load the package package
+  (require 'package)
+  (package-initialize)
   (add-to-list 'package-archives
                '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 #+end_src
@@ -145,13 +148,13 @@ Don't show warnings made by the byte compiler. It is usefull for developers but 
 #+begin_src emacs-lisp
   ;; Set the default pitch face
   (set-face-attribute 'default nil
-                      :font "JetBrains Mono"
+                      :font "JetBrains Mono Nerd Font"
                       :weight 'normal
                       :height 120)
 
   ;; Set the fixed pitch face
   (set-face-attribute 'fixed-pitch nil
-                      :font "JetBrains Mono"
+                      :font "JetBrains Mono Nerd Font"
                       :height 1.0
                       :weight 'normal)
 

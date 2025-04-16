@@ -35,6 +35,8 @@
   (cua-mode t)
   (transient-mark-mode 1))
 
+;; Load the package package
+(require 'package)
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
@@ -73,19 +75,14 @@
 (add-hook 'text-mode-hook #'hl-line-mode)
 
 ;; Screenshots: https://github.com/doomemacs/themes/blob/screenshots/
- (use-package doom-themes
-  ;; :vc (:url "https://github.com/doomemacs/themes" :branch "master")
+(use-package doom-themes
+  :vc (:url "https://github.com/doomemacs/themes" :rev :newest)
   :ensure t
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
 	doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+  (load-theme 'doom-one t))
 
 (use-package doom-modeline
   :ensure t
@@ -224,7 +221,7 @@
 
 ;; Sleek look
 (use-package org-modern-indent
-  :vc (:url "https://github.com/jdtsmith/org-modern-indent" :branch "main")
+  :vc (:url "https://github.com/jdtsmith/org-modern-indent" :rev :newest)
   :ensure t
   :config
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))

@@ -37,6 +37,7 @@
 
 ;; Load the package package
 (require 'package)
+(package-initialize)
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
@@ -90,13 +91,13 @@
 
 ;; Set the default pitch face
 (set-face-attribute 'default nil
-                    :font "JetBrains Mono"
+                    :font "JetBrains Mono Nerd Font"
                     :weight 'normal
                     :height 120)
 
 ;; Set the fixed pitch face
 (set-face-attribute 'fixed-pitch nil
-                    :font "JetBrains Mono"
+                    :font "JetBrains Mono Nerd Font"
                     :height 1.0
                     :weight 'normal)
 

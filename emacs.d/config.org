@@ -1,6 +1,6 @@
 #+TITLE: Simple GNU Emacs Configuration
 #+AUTHOR: Guillaume Peltier
-#+PROPERTY: header-args :emacs-lisp :tangle ./init.el :mkdirp yes :results silent
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes :results silent
 
 * Startup performance
 
@@ -41,7 +41,9 @@ Note that I switch Shift and Control system-wide.
       (exec-path-from-shell-initialize))
     ;; Simulate CUA mode on Mac
     (keymap-global-set "M-c" 'kill-ring-save)
-    (keymap-global-set "M-v" 'yank))
+    (keymap-global-set "M-v" 'yank)
+    (setq font_fix-pitch "JetBrains Mono")
+    (setq font_var-pitch "Iosevka Aile"))
 #+end_src
 
 Make ESC cancel everything.
@@ -58,7 +60,9 @@ CUA-mode allows one to use =C-v=, =C-c=, and =C-x= to paste, copy, and cut the r
   (when (eq system-type 'gnu/linux)
     (setq cua-auto-tabify-rectangles nil)
     (cua-mode t)
-    (transient-mark-mode 1))
+    (transient-mark-mode 1)
+    (setq font_fix-pitch "JetBrains Mono Nerd Font")
+    (setq font_var-pitch "Iosevka Aile"))
 #+end_src
 
 * General configuration
@@ -143,19 +147,19 @@ Don't show warnings made by the byte compiler. It is usefull for developers but 
 #+begin_src emacs-lisp
   ;; Set the default pitch face
   (set-face-attribute 'default nil
-                      :font "JetBrains Mono Nerd Font"
+                      :font font_fix-pitch
                       :weight 'normal
                       :height 120)
 
   ;; Set the fixed pitch face
   (set-face-attribute 'fixed-pitch nil
-                      :font "JetBrains Mono Nerd Font"
+                      :font font_fix-pitch
                       :height 1.0
                       :weight 'normal)
 
   ;; Set the variable pitch face
   (set-face-attribute 'variable-pitch nil
-                      :font "Iosevka Aile"
+                      :font font_var-pitch
                       :height 1.0
                       :weight 'normal)
 #+end_src

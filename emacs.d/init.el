@@ -26,14 +26,18 @@
     (exec-path-from-shell-initialize))
   ;; Simulate CUA mode on Mac
   (keymap-global-set "M-c" 'kill-ring-save)
-  (keymap-global-set "M-v" 'yank))
+  (keymap-global-set "M-v" 'yank)
+  (setq font_fix-pitch "JetBrains Mono")
+  (setq font_var-pitch "Iosevka Aile"))
 
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 (when (eq system-type 'gnu/linux)
   (setq cua-auto-tabify-rectangles nil)
   (cua-mode t)
-  (transient-mark-mode 1))
+  (transient-mark-mode 1)
+  (setq font_fix-pitch "JetBrains Mono Nerd Font")
+  (setq font_var-pitch "Iosevka Aile"))
 
 ;; Load the package package
 (require 'package)
@@ -91,19 +95,19 @@
 
 ;; Set the default pitch face
 (set-face-attribute 'default nil
-                    :font "JetBrains Mono Nerd Font"
+                    :font font_fix-pitch
                     :weight 'normal
                     :height 120)
 
 ;; Set the fixed pitch face
 (set-face-attribute 'fixed-pitch nil
-                    :font "JetBrains Mono Nerd Font"
+                    :font font_fix-pitch
                     :height 1.0
                     :weight 'normal)
 
 ;; Set the variable pitch face
 (set-face-attribute 'variable-pitch nil
-                    :font "Iosevka Aile"
+                    :font font_var-pitch
                     :height 1.0
                     :weight 'normal)
 

@@ -200,6 +200,30 @@
 (use-package code-cells
   :ensure t)
 
+(use-package vterm
+  :vc (:url "https://github.com/akermu/emacs-libvterm" :branch "master")
+  :ensure t)
+
+(use-package popper
+  :ensure t
+  :bind (("C-ù" . popper-toggle)
+         ("M-ù" .  popper-cycle)
+         ("C-M-ù" . popper-toggle-type))
+  :init
+  (setq popper-window-height 12)
+  (setq popper-reference-buffers
+      '("\\*Messages\\*"
+        "Output\\*$"
+        "\\*Async Shell Command\\*"
+        help-mode
+        compilation-mode
+        "^\\*eshell.*\\*$" eshell-mode
+        "^\\*vterm.*\\*" vterm-mode
+        "^\\*Python\\*"
+        "^\\*julia\\*"))
+  (popper-mode +1)
+  (popper-echo-mode +1))
+
 (use-package org
   :hook
   (org-mode . visual-line-mode)

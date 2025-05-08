@@ -368,3 +368,22 @@
          "  Generate ONLY the replacement text,"
          " without any explanation."))))
   (add-hook 'gptel-rewrite-directives-hook 'gpltr/gptel--rewrite-directive-default))
+
+(defun gpltr/gptel-from-anywhere ()
+  (interactive)
+  (let* ((display-width (display-pixel-width))
+         (display-height (display-pixel-height))
+         (frame-width (/ display-width 3))
+         (frame-height display-height))
+    (make-frame `((window-system . ns)
+                  (left . 0)
+                  (top . 0)
+                  (width . 80)
+                  (height . 999))))
+  (gptel "My:AI Chat" gptel-api-key nil)
+  (switch-to-buffer "My:AI Chat")
+  (delete-other-windows))
+
+(use-package emacs-everywhere
+  :vc (:url "https://github.com/tecosaur/emacs-everywhere" :branch "master" :rev :newest)
+  :ensure t)

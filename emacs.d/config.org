@@ -538,3 +538,86 @@ The following function will define a inline diff for rewrite region and also set
     (add-hook 'gptel-rewrite-directives-hook 'gpltr/gptel--rewrite-directive-default))
 #+end_src
 
+* WIP
+
+** Everywhere
+*** Launch daemon
+
+Have your emacs run in the background (cf. [[https://web.archive.org/web/20230203003011/https://briansunter.com/blog/emacs-daemon-macos]])
+
+The main thing is to create this file ~/Library/LaunchAgents/gnu.emacs.daemon.plist~:
+#+begin_src sh
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>gnu.emacs.daemon</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs</string>
+      <string>--daemon</string>
+    </array>
+   <key>RunAtLoad</key>
+   <true/>
+   <key>ServiceDescription</key>
+   <string>Gnu Emacs Daemon</string>
+  </dict>
+  </plist>
+#+end_src
+
+And launch
+#+begin_src sh
+  launchctl load -w ~/Library/LaunchAgents/gnu.emacs.daemon.plist
+#+end_src
+
+*** LLM everywhere
+
+Cool setup : https://www.armindarvish.com/post/use_emacs_as_a_chatgpt_client/
+#+begin_src emacs-lisp
+  (defun gpltr/gptel-from-anywhere ()
+    (interactive)
+    (let* ((display-width (display-pixel-width))
+           (display-height (display-pixel-height))
+           (frame-width (/ display-width 3))
+           (frame-height display-height))
+      (make-frame `((window-system . ns)
+                    (left . 0)
+                    (top . 0)
+                    (width . 80)
+                    (height . 999))))
+    (gptel "My:AI Chat" gptel-api-key nil)
+    (switch-to-buffer "My:AI Chat")
+    (delete-other-windows))
+#+end_src
+
+You need to have emacs daemon running for the folowing 
+
+On macos, you will need to install http://www.hammerspoon.org/ and put
+#+begin_src lua :tangle ~/.hammerspoon/init.lua
+  hyper = {"cmd", "ctrl"}
+  hs.hotkey.bindSpec({hyper, "g"},
+    function()
+      hs.execute("/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval '(gpltr/gptel-from-anywhere)' '(select-frame-set-input-focus (selected-frame))'")
+    end
+  )
+#+end_src
+
+*** Emacs everywhere
+
+#+begin_src emacs-lisp
+  (use-package emacs-everywhere
+    :vc (:url "https://github.com/tecosaur/emacs-everywhere" :branch "master" :rev :newest)
+    :ensure t)
+#+end_src
+
+On macos, you will need to install http://www.hammerspoon.org/ and put
+#+begin_src lua :tangle ~/.hammerspoon/init.lua
+  hs.hotkey.bindSpec({hyper, "e"},
+    function()
+      hs.execute("/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval '(emacs-everywhere)'")
+    end
+  )
+#+end_src
+

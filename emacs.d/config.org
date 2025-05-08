@@ -144,24 +144,36 @@ Don't show warnings made by the byte compiler. It is usefull for developers but 
 
 ** Fonts
 
+This is to fixe a bug where emacsclient does not have the same font as emacs :
+
 #+begin_src emacs-lisp
-  ;; Set the default pitch face
-  (set-face-attribute 'default nil
-                      :font font_fix-pitch
-                      :weight 'normal
-                      :height 120)
+  (defun gpltr/set-font-faces ()
+    (message "Setting faces!")
+      ;; Set the default pitch face
+    (set-face-attribute 'default nil
+                        :font font_fix-pitch
+                        :weight 'normal
+                        :height 120)
 
-  ;; Set the fixed pitch face
-  (set-face-attribute 'fixed-pitch nil
-                      :font font_fix-pitch
-                      :height 1.0
-                      :weight 'normal)
+    ;; Set the fixed pitch face
+    (set-face-attribute 'fixed-pitch nil
+                        :font font_fix-pitch
+                        :height 1.0
+                        :weight 'normal)
 
-  ;; Set the variable pitch face
-  (set-face-attribute 'variable-pitch nil
-                      :font font_var-pitch
-                      :height 1.0
-                      :weight 'normal)
+    ;; Set the variable pitch face
+    (set-face-attribute 'variable-pitch nil
+                        :font font_var-pitch
+                        :height 1.0
+                        :weight 'normal))
+
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+                (lambda (frame)
+                  ;; (setq doom-modeline-icon t)
+                  (with-selected-frame frame
+                    (gpltr/set-font-faces))))
+    (gpltr/set-font-faces))
 #+end_src
 
 ** Auto-Saving Changed Files

@@ -93,23 +93,33 @@
   :ensure t
   :hook (after-init . doom-modeline-mode))
 
-;; Set the default pitch face
-(set-face-attribute 'default nil
-                    :font font_fix-pitch
-                    :weight 'normal
-                    :height 120)
+(defun gpltr/set-font-faces ()
+  (message "Setting faces!")
+    ;; Set the default pitch face
+  (set-face-attribute 'default nil
+                      :font font_fix-pitch
+                      :weight 'normal
+                      :height 120)
 
-;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil
-                    :font font_fix-pitch
-                    :height 1.0
-                    :weight 'normal)
+  ;; Set the fixed pitch face
+  (set-face-attribute 'fixed-pitch nil
+                      :font font_fix-pitch
+                      :height 1.0
+                      :weight 'normal)
 
-;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil
-                    :font font_var-pitch
-                    :height 1.0
-                    :weight 'normal)
+  ;; Set the variable pitch face
+  (set-face-attribute 'variable-pitch nil
+                      :font font_var-pitch
+                      :height 1.0
+                      :weight 'normal))
+
+(if (daemonp)
+    (add-hook 'after-make-frame-functions
+              (lambda (frame)
+                ;; (setq doom-modeline-icon t)
+                (with-selected-frame frame
+                  (gpltr/set-font-faces))))
+  (gpltr/set-font-faces))
 
 (defvar user-temporary-file-directory (concat user-emacs-directory "tmp/"))
 

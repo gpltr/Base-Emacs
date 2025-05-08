@@ -474,6 +474,8 @@ The api key is define in =~/.authinfo=
      gptel-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)))
 #+end_src
 
+* WIP
+
 ** LLM for spelling and grammar
 
 To have inline diff I followed: https://github.com/karthink/gptel/wiki/gptel%E2%80%90rewrite-addons
@@ -550,15 +552,13 @@ The following function will define a inline diff for rewrite region and also set
     (add-hook 'gptel-rewrite-directives-hook 'gpltr/gptel--rewrite-directive-default))
 #+end_src
 
-* WIP
-
 ** Everywhere
 *** Launch daemon
 
 Have your emacs run in the background (cf. [[https://web.archive.org/web/20230203003011/https://briansunter.com/blog/emacs-daemon-macos]])
 
 The main thing is to create this file ~/Library/LaunchAgents/gnu.emacs.daemon.plist~:
-#+begin_src sh
+#+begin_src sh :tangle ~/Library/LaunchAgents/gnu.emacs.daemon.plist
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
     "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -568,7 +568,7 @@ The main thing is to create this file ~/Library/LaunchAgents/gnu.emacs.daemon.pl
     <string>gnu.emacs.daemon</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs</string>
+      <string>/Applications/Emacs.app/Contents/MacOS/Emacs</string>
       <string>--daemon</string>
     </array>
    <key>RunAtLoad</key>

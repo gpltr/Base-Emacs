@@ -447,3 +447,94 @@ Notion supports Github Markdown syntax so to export orgmode text to it I need a 
     (with-eval-after-load 'org
       '(require 'ox-gfm nil t)))
 #+end_src
+
+* LLM
+
+The api key is define in =~/.authinfo=
+#+begin_src emacs-lisp
+  (use-package gptel
+    :ensure t
+    :bind (("C-c g" . gptel-menu))
+    :config
+    (setq
+     gptel-default-mode 'org-mode
+     gptel-model 'claude-3-5-sonnet-20240620
+     gptel-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)))
+#+end_src
+
+** LLM for spelling and grammar
+
+To have inline diff I followed: https://github.com/karthink/gptel/wiki/gptel%E2%80%90rewrite-addons
+
+You need to manually clone the [[https://code.tecosaur.net/tec/inline-diff][repo]] to the location =~/.emacs.d/local/inline-diff=
+#+begin_src emacs-lisp
+  (use-package inline-diff
+    :vc t
+    :load-path "~/.emacs.d/local/inline-diff"
+    :ensure t
+    :after gptel-rewrite)
+#+end_src
+
+The following function will define a inline diff for rewrite region and also set a better prompt for rewriting.
+#+begin_src emacs-lisp
+  (use-package gptel-rewrite
+    :vc (:url "https://github.com/karthink/gptel" :branch "main")
+    :ensure t
+    :after gptel
+    :bind (:map gptel-rewrite-actions-map
+       ("C-c C-i" . gptel--rewrite-inline-diff))
+    :config
+    (defun gptel--rewrite-inline-diff (&optional ovs)
+      "Start an inline-diff session on OVS."
+      (interactive (list (gptel--rewrite-overlay-at)))
+      (unless (require 'inline-diff nil t)
+        (user-error "Inline diffs require the inline-diff package."))
+      (when-let* ((ov-buf (overlay-buffer (or (car-safe ovs) ovs)))
+                  ((buffer-live-p ov-buf)))
+        (with-current-buffer ov-buf
+          (cl-loop for ov in (ensure-list ovs)
+                   for ov-beg = (overlay-start ov)
+                   for ov-end = (overlay-end ov)
+                   for response = (overlay-get ov 'gptel-rewrite)
+                   do (delete-overlay ov)
+                   (inline-diff-words
+                    ov-beg ov-end response)))))
+    (when (boundp 'gptel--rewrite-dispatch-actions)
+      (add-to-list
+       'gptel--rewrite-dispatch-actions '(?i "inline-diff")
+       'append))
+
+    (defun gpltr/gptel--rewrite-directive-default ()
+      "Generic directive for rewriting or refactoring.
+
+      These are instructions not specific to any particular required
+      change.
+
+      The returned string is interpreted as the system message for the
+      rewrite request.  To use your own, add a different directive to
+      `gptel-directives', or add to `gptel-rewrite-directives-hook',
+      which see."
+      (let* ((lang (downcase (gptel--strip-mode-suffix major-mode)))
+             (article (if (and lang (not (string-empty-p lang))
+                                   (memq (aref lang 0) '(?a ?e ?i ?o ?u)))
+                          "an" "a")))
+        (if (derived-mode-p 'prog-mode)
+            (format (concat "You are %s %s programmer.  "
+                            "Follow my instructions and refactor %s code I provide.\n"
+                            "- Generate ONLY %s code as output, without "
+                            "any explanation or markdown code fences.\n"
+                            "- Generate code in full, do not abbreviate or omit code.\n"
+                            "- Do not ask for further clarification, and make "
+                            "any assumptions you need to follow instructions.")
+                    article lang lang lang)
+          (concat
+           "You are an a grammatical and spelling expert in all language."
+           (if (string-empty-p lang)
+               ""
+             (format "You are in a %s %s editor." article lang))
+           "  Follow my instructions and only fix mistakes in the text I provide."
+           "  Generate ONLY the replacement text,"
+           " without any explanation."))))
+    (add-hook 'gptel-rewrite-directives-hook 'gpltr/gptel--rewrite-directive-default))
+#+end_src
+

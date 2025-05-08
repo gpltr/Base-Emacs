@@ -310,6 +310,14 @@ https://magit.vc/manual/magit/
     (magit-diff-refine-hunk (quote all)))
 #+end_src
 
+** Code cell
+
+To read jupyter notebook in emacs
+#+begin_src emacs-lisp
+  (use-package code-cells
+    :ensure t)
+#+end_src
+
 * Org Mode
 ** Org Configuration
 

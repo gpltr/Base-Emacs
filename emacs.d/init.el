@@ -197,6 +197,9 @@
   :custom
   (magit-diff-refine-hunk (quote all)))
 
+(use-package code-cells
+  :ensure t)
+
 (use-package org
   :hook
   (org-mode . visual-line-mode)

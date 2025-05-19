@@ -397,3 +397,51 @@
 (use-package emacs-everywhere
   :vc (:url "https://github.com/tecosaur/emacs-everywhere" :branch "master" :rev :newest)
   :ensure t)
+
+(use-package detached
+  :vc (:url "https://github.com/LemonBreezes/detached.el")
+  :ensure t
+  :init
+  (detached-init)
+  :bind (;; Replace `async-shell-command' with `detached-shell-command'
+	 ([remap async-shell-command] . detached-shell-command)
+	 ;; Replace `compile' with `detached-compile'
+	 ([remap compile] . detached-compile)
+	 ([remap recompile] . detached-compile-recompile)
+	 ;; Replace built in completion of sessions with `consult'
+	 ([remap detached-open-session] . detached-consult-session))
+  :custom ((detached-show-output-on-attach t)
+           (detached-terminal-data-command system-type))
+  :config (setq detached-notification-function #'detached-state-transition-echo-message))
+
+(defun my-gfm-src-block (src-block contents info)
+  "Add colapse around code block if :attr_gfm :hide t"
+  (if (not (org-export-read-attribute :attr_gfm src-block :hide))
+      (org-export-with-backend 'gfm src-block contents info)
+    (let* ((name (org-element-property :name src-block))
+	   (prefix (concat "<details>\n<summary><code>" name "</code></summary>\n\n"))
+	   (content (org-gfm-src-block src-block contents info))
+  	(suffix "```\n\n</details>"))
+      (concat prefix content suffix))))
+
+(defun my-gfm-headline (headline contents info)
+  "Transcode HEADLINE element into Markdown format.
+  CONTENTS is the headline contents.  INFO is a plist used as
+  a communication channel."
+  (if (not (org-element-property :HIDE headline))
+      (org-export-with-backend 'gfm headline contents info)
+    (let ((level (number-to-string (+ (org-export-get-relative-level headline info)
+				       (1- (plist-get info :md-toplevel-hlevel)))))
+	  (title (org-export-data (org-element-property :title headline) info))
+	  (style (plist-get info :md-headline-style)))
+	(concat "<details>\n<summary><h"  level ">" title "</h" level "></summary>\n\n"
+		contents "\n</details>\n\n"))))
+
+
+(org-export-define-derived-backend 'my-gfm 'gfm
+  :translate-alist '((src-block . my-gfm-src-block)
+		     (headline . my-gfm-headline))
+  :menu-entry
+  '(?G "Mod of gfm"
+       ((?G "To temporary buffer"
+	    (lambda (a s v b) (org-export-to-buffer 'my-gfm "*Org GFM Export*" a s v nil nil (lambda () (text-mode))))))))

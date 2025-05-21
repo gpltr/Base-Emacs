@@ -445,3 +445,50 @@
   '(?G "Mod of gfm"
        ((?G "To temporary buffer"
 	    (lambda (a s v b) (org-export-to-buffer 'my-gfm "*Org GFM Export*" a s v nil nil (lambda () (text-mode))))))))
+
+(use-package org-transclusion
+  :ensure t
+  :after org)
+
+(use-package corfu
+  :ensure t
+  :after orderless
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-separator ?\s)          ;; Orderless field separator
+  (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  (corfu-echo-documentation t) ;; Disable documentation in the echo area
+  (corfu-scroll-margin 5)        ;; Use scroll margin
+  :init
+  (global-corfu-mode) ; This does not play well in eshell if you run a repl)
+  (define-key corfu-map (kbd "M-p") #'corfu-popupinfo-scroll-down) ;; corfu-next
+  (define-key corfu-map (kbd "M-n") #'corfu-popupinfo-scroll-up))  ;; corfu-previous
+
+(use-package eglot
+  :ensure t
+  :hook ((python-mode . eglot-ensure)
+	 (python-ts-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               `((python-mode python-ts-mode)
+		 . ,(eglot-alternatives '(("uv" "run" "--with" "python-lsp-ruff" "pylsp"))))))
+
+(setq python-cmd "uv run python")
+(defun python-shell-calculate-command () (format "%s %s" python-cmd python-shell-interpreter-args))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

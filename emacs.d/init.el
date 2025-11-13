@@ -40,10 +40,15 @@
   (setq font_var-pitch "Iosevka Aile"))
 
 ;; Load the package package
-(require 'package)
-(package-initialize)
-(add-to-list 'package-archives
-             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  (require 'package)
+  (package-initialize)
+  (add-to-list 'package-archives
+               '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+  ;; Introduce vc keyword on use-package on for before emacs 30
+(unless (package-installed-p 'vc-use-package)
+  (package-vc-install "https://github.com/slotThe/vc-use-package"))
+(require 'vc-use-package)
 
 ;; Thanks, but no thanks
 (setq inhibit-startup-message t)
@@ -81,7 +86,7 @@
 
 ;; Screenshots: https://github.com/doomemacs/themes/blob/screenshots/
 (use-package doom-themes
-  :vc (:url "https://github.com/doomemacs/themes" :rev :newest)
+  :vc (:fetcher github :repo doomemacs/themes)
   :ensure t
   :config
   ;; Global settings (defaults)
@@ -226,7 +231,7 @@
 
 ;; Sleek look
 (use-package org-modern-indent
-  :vc (:url "https://github.com/jdtsmith/org-modern-indent" :rev :newest)
+  :vc (:fetcher github :repo jdtsmith/org-modern-indent)
   :ensure t
   :config
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
@@ -266,3 +271,18 @@
   :init
   (with-eval-after-load 'org
     '(require 'ox-gfm nil t)))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil)
+ '(package-vc-selected-packages
+   '((vc-use-package :vc-backend Git :url
+		     "https://github.com/slotThe/vc-use-package"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

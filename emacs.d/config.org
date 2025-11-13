@@ -69,11 +69,16 @@ CUA-mode allows one to use =C-v=, =C-c=, and =C-x= to paste, copy, and cut the r
 ** Package
 
 #+begin_src emacs-lisp
-  ;; Load the package package
-  (require 'package)
-  (package-initialize)
-  (add-to-list 'package-archives
-               '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+    ;; Load the package package
+    (require 'package)
+    (package-initialize)
+    (add-to-list 'package-archives
+                 '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+    ;; Introduce vc keyword on use-package on for before emacs 30
+  (unless (package-installed-p 'vc-use-package)
+    (package-vc-install "https://github.com/slotThe/vc-use-package"))
+  (require 'vc-use-package)
 #+end_src
 
 ** User Interface
@@ -129,7 +134,7 @@ Don't show warnings made by the byte compiler. It is usefull for developers but 
 
   ;; Screenshots: https://github.com/doomemacs/themes/blob/screenshots/
   (use-package doom-themes
-    :vc (:url "https://github.com/doomemacs/themes" :rev :newest)
+    :vc (:fetcher github :repo doomemacs/themes)
     :ensure t
     :config
     ;; Global settings (defaults)
@@ -345,7 +350,7 @@ Set up Org Mode with a baseline configuration. The following sections will add m
 
   ;; Sleek look
   (use-package org-modern-indent
-    :vc (:url "https://github.com/jdtsmith/org-modern-indent" :rev :newest)
+    :vc (:fetcher github :repo jdtsmith/org-modern-indent)
     :ensure t
     :config
     (add-hook 'org-mode-hook #'org-modern-indent-mode 90))

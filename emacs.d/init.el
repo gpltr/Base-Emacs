@@ -212,25 +212,119 @@
 
 (use-package vterm
   :vc (:url "https://github.com/akermu/emacs-libvterm" :branch "master")
-  :ensure t)
+  :ensure t
+  :bind (("C-q" . vterm-send-next-key)))
+
+(defun buffer-mode (&optional buffer-or-name)
+  "Returns the major mode associated with a buffer.
+If buffer-or-name is nil return current buffer's mode."
+  (buffer-local-value 'major-mode
+                      (if buffer-or-name
+                          (get-buffer buffer-or-name)
+                        (current-buffer))))
+
+(defvar gpltr/repl-names-list
+  '("^\\*Python.*\\*$"
+    "\\*julia.*\\*"
+    "^\\*edebug.*\\*$"
+    "^\\*vterm.*\\*$")
+  "List of buffer names used in REPL buffers")
+
+(defvar gpltr/help-modes-list
+  '(helpful-mode
+    help-mode
+    pydoc-mode
+    eldoc-mode
+    TeX-special-mode)
+  "List of major-modes used in documentation buffers")
+
+(defvar gpltr/occur-grep-modes-list
+  '(occur-mode
+    grep-mode
+    xref--xref-buffer-mode
+    locate-mode
+    flymake-diagnostics-buffer-mode)
+  "List of major-modes used in occur-type buffers")
+
+(defvar gpltr/message-names-list
+  '("\\*\\(?:Warnings\\|Compile-Log\\|Messages\\)\\*"
+    "[Oo]utput\\*"
+    "\\*Async Shell Command\\*")
+  "List of buffer names used in message buffers")
+
+;; Occur type buffers on the top
+(setq display-buffer-alist
+      '(
+	((lambda (buf act) (member (buffer-mode buf) gpltr/occur-grep-modes-list))
+	 (display-buffer-reuse-mode-window
+	  display-buffer-in-direction
+	  display-buffer-in-side-window)
+	 (side . top)
+	 (slot . 5)
+	 (window-height . (lambda (win) (fit-window-to-buffer win 20 10)))
+	 (direction . above)
+	 (body-function . select-window))
+
+	;; Message buffers on the bottom
+	((lambda (buf act) (seq-some (lambda (regex) (string-match-p regex buf)) gpltr/message-names-list))
+	 (display-buffer-at-bottom display-buffer-in-side-window)
+	 (window-height . 0.25)
+	 (side . bottom)
+	 (slot . -6))
+
+	;; REPL type buffer at the right
+	((lambda (buf act) (seq-some (lambda (regex) (string-match-p regex buf)) gpltr/repl-names-list))
+	 (display-buffer-reuse-window
+	  display-buffer-in-side-window)
+	 (body-function . select-window)
+	 ;; display-buffer-at-left
+	 (window-width .  .40)
+	 ;; (preserve-size . (nil . t))
+	 (side . right)
+	 (slot . 1))
+
+	;; Help type buffer at the right
+	((lambda (buf act) (member (buffer-mode buf) gpltr/help-modes-list))
+	 (display-buffer-reuse-window
+	  display-buffer-in-side-window)
+	 (body-function . select-window)
+	 ;; display-buffer-at-left
+	 (window-width .  .40)
+	 ;; (preserve-size . (nil . t))
+	 (side . right)
+	 (slot . 2))
+
+      ;; julia-doc buffer (as it does not have a specific mode)
+      ("\\*julia-doc\\*"
+       (display-buffer-reuse-window
+	display-buffer-in-side-window)
+       (body-function . select-window)
+       ;; display-buffer-at-left
+       (window-width .  .40)
+       ;; (preserve-size . (nil . t))
+       (side . right)
+       (slot . 2))))
 
 (use-package popper
   :ensure t
   :bind (("C-ù" . popper-toggle)
          ("M-ù" .  popper-cycle)
          ("C-M-ù" . popper-toggle-type))
+
   :init
-  (setq popper-window-height 12)
   (setq popper-reference-buffers
-      '("\\*Messages\\*"
-        "Output\\*$"
-        "\\*Async Shell Command\\*"
-        help-mode
-        compilation-mode
-        "^\\*eshell.*\\*$" eshell-mode
-        "^\\*vterm.*\\*" vterm-mode
-        "^\\*Python\\*"
-        "^\\*julia\\*"))
+	'("\\*Messages\\*"
+	  "Output\\*$"
+	  "\\*Async Shell Command\\*"
+	  help-mode
+	  compilation-mode
+	  "^\\*eshell.*\\*$" eshell-mode
+	  "^\\*vterm.*\\*" vterm-mode
+	  "^\\*Python.*\\*"
+	  "\\*julia.*\\*"
+	  "^\\*eldoc\\*"
+	  "^\\*gud-run\\*"))
+  (setq popper-display-control nil)
   (popper-mode +1)
   (popper-echo-mode +1))
 
@@ -251,7 +345,10 @@
     '((shell . t)
       (gnuplot . t)
       (python . t)
-      (emacs-lisp . t))))
+      (emacs-lisp . t)
+      (julia-vterm . t)))
+  (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
+  (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm))
 
 ;; Center org document
 (use-package olivetti
@@ -276,7 +373,8 @@
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python"))
   (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
-  (add-to-list 'org-structure-template-alist '("json" . "src json")))
+  (add-to-list 'org-structure-template-alist '("json" . "src json"))
+  (add-to-list 'org-structure-template-alist '("julia" . "src julia")))
 
 (use-package org-superstar
   :ensure t
@@ -304,80 +402,61 @@
   (with-eval-after-load 'org
     '(require 'ox-gfm nil t)))
 
-(use-package gptel
-  :ensure t
-  :bind (("C-c g" . gptel-menu))
-  :config
-  (setq
-   gptel-default-mode 'org-mode
-   gptel-model 'claude-3-5-sonnet-20240620
-   gptel-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)))
-
 (use-package inline-diff
   :vc t
   :load-path "~/.emacs.d/local/inline-diff"
-  :ensure t
-  :after gptel-rewrite)
+  :ensure t)
 
-(use-package gptel-rewrite
+(use-package gptel
   :vc (:url "https://github.com/karthink/gptel" :branch "main")
   :ensure t
-  :after gptel
-  :bind (:map gptel-rewrite-actions-map
-     ("C-c C-i" . gptel--rewrite-inline-diff))
-  :config
-  (defun gptel--rewrite-inline-diff (&optional ovs)
+  :bind (("C-c g" . gptel-menu)
+	 ("C-c r" . gpltr/rewrite-with-inline-diff))
+  :commands (gptel gptel-menu gptel--suffix-rewrite)
+  :init
+  (defun gpltr/gptel--rewrite-inline-diff (&optional ovs)
     "Start an inline-diff session on OVS."
     (interactive (list (gptel--rewrite-overlay-at)))
     (unless (require 'inline-diff nil t)
       (user-error "Inline diffs require the inline-diff package."))
     (when-let* ((ov-buf (overlay-buffer (or (car-safe ovs) ovs)))
-                ((buffer-live-p ov-buf)))
+		((buffer-live-p ov-buf)))
       (with-current-buffer ov-buf
-        (cl-loop for ov in (ensure-list ovs)
-                 for ov-beg = (overlay-start ov)
-                 for ov-end = (overlay-end ov)
-                 for response = (overlay-get ov 'gptel-rewrite)
-                 do (delete-overlay ov)
-                 (inline-diff-words
+	(cl-loop for ov in (ensure-list ovs)
+		 for ov-beg = (overlay-start ov)
+		 for ov-end = (overlay-end ov)
+		 for response = (overlay-get ov 'gptel-rewrite)
+		 do (delete-overlay ov)
+		 (inline-diff-words
                   ov-beg ov-end response)))))
-  (when (boundp 'gptel--rewrite-dispatch-actions)
-    (add-to-list
-     'gptel--rewrite-dispatch-actions '(?i "inline-diff")
-     'append))
-
-  (defun gpltr/gptel--rewrite-directive-default ()
-    "Generic directive for rewriting or refactoring.
-
-    These are instructions not specific to any particular required
-    change.
-
-    The returned string is interpreted as the system message for the
-    rewrite request.  To use your own, add a different directive to
-    `gptel-directives', or add to `gptel-rewrite-directives-hook',
-    which see."
-    (let* ((lang (downcase (gptel--strip-mode-suffix major-mode)))
-           (article (if (and lang (not (string-empty-p lang))
-                                 (memq (aref lang 0) '(?a ?e ?i ?o ?u)))
-                        "an" "a")))
-      (if (derived-mode-p 'prog-mode)
-          (format (concat "You are %s %s programmer.  "
-                          "Follow my instructions and refactor %s code I provide.\n"
-                          "- Generate ONLY %s code as output, without "
-                          "any explanation or markdown code fences.\n"
-                          "- Generate code in full, do not abbreviate or omit code.\n"
-                          "- Do not ask for further clarification, and make "
-                          "any assumptions you need to follow instructions.")
-                  article lang lang lang)
-        (concat
-         "You are an a grammatical and spelling expert in all language."
-         (if (string-empty-p lang)
-             ""
-           (format "You are in a %s %s editor." article lang))
-         "  Follow my instructions and only fix mistakes in the text I provide."
-         "  Generate ONLY the replacement text,"
-         " without any explanation."))))
-  (add-hook 'gptel-rewrite-directives-hook 'gpltr/gptel--rewrite-directive-default))
+  (defun gpltr/rewrite-with-inline-diff ()
+    "Launch gptel-rewrite on region with fixed directive and inline-diff."
+    (interactive)
+    (require 'gptel-rewrite)
+    (unless (use-region-p)
+      (mark-whole-buffer))
+    (let ((gptel--rewrite-directive
+                  (concat
+                   "You are a grammatical and spelling expert in all languages. "
+                   "Proofread the following text. Generate ONLY the corrected text, "
+                   "without any explanation before or after. If no mistakes are found just copy the text: ")))
+      (setq-local gptel-rewrite-default-action #'gpltr/gptel--rewrite-inline-diff)
+      (gptel--suffix-rewrite "Proofread: ")))
+  :config
+  (setq
+   gptel-default-mode 'org-mode
+   gptel-model 'claude-haiku-4-5-20251001
+   gptel-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key))
+  ;; https://github.com/karthink/gptel/issues/937
+  (advice-add
+   'gptel--request-data
+   :around
+   (lambda (orig-fn &rest args)
+     (when (cl-typep (car args) 'gptel-anthropic)
+       (let ((result (apply orig-fn args)))
+         (cons :tools (cons '[(:type "web_search_20250305"
+				     :name "web_search"
+				     :max_uses 5)] result)))))))
 
 (defun gpltr/gptel-from-anywhere ()
   (interactive)
@@ -450,6 +529,22 @@
   :ensure t
   :after org)
 
+(use-package python
+  :config
+  (setq python-cmd "uv run python")
+  (setq gud-pdb-command-name "uv run python -m pdb")
+  (defun python-shell-calculate-command () (format "%s %s" python-cmd python-shell-interpreter-args)))
+
+(use-package eglot
+  :ensure t
+  :hook ((python-mode . eglot-ensure)
+	 (python-ts-mode . eglot-ensure))
+  :config
+  (setq eldoc-echo-area-use-multiline-p nil)
+  (add-to-list 'eglot-server-programs
+               `((python-mode python-ts-mode)
+		 . ,(eglot-alternatives '(("uv" "run" "--with" "python-lsp-ruff" "pylsp"))))))
+
 (use-package corfu
   :ensure t
   :after orderless
@@ -469,23 +564,34 @@
   (define-key corfu-map (kbd "M-p") #'corfu-popupinfo-scroll-down) ;; corfu-next
   (define-key corfu-map (kbd "M-n") #'corfu-popupinfo-scroll-up))  ;; corfu-previous
 
-(use-package eglot
-  :ensure t
-  :hook ((python-mode . eglot-ensure)
-	 (python-ts-mode . eglot-ensure))
-  :config
-  (add-to-list 'eglot-server-programs
-               `((python-mode python-ts-mode)
-		 . ,(eglot-alternatives '(("uv" "run" "--with" "python-lsp-ruff" "pylsp"))))))
+(use-package ediff
+  :custom
+  (ediff-window-setup-function 'ediff-setup-windows-plain)
+  (ediff-diff-options "-w")
+  (ediff-split-window-function 'split-window-horizontally))
 
-(setq python-cmd "uv run python")
-(defun python-shell-calculate-command () (format "%s %s" python-cmd python-shell-interpreter-args))
+(setenv "JULIA_NUM_THREADS" "4")
+
+(use-package julia-mode
+  :ensure t)
+
+(use-package julia-vterm
+  :ensure t
+  :hook (julia-mode . julia-vterm-mode))
+
+(use-package ob-julia-vterm
+  :ensure t)
+
+(use-package eglot-jl
+  :ensure t
+  :config
+  (eglot-jl-init))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
+ '(safe-local-variable-values '((org-confirm-babel-evaluate))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

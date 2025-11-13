@@ -335,31 +335,128 @@ To read jupyter notebook in emacs
 #+begin_src emacs-lisp
   (use-package vterm
     :vc (:url "https://github.com/akermu/emacs-libvterm" :branch "master")
-    :ensure t)
+    :ensure t
+    :bind (("C-q" . vterm-send-next-key)))
 #+end_src
 
 ** Mini buffers
 
+Inspired from [[https://github.com/karthink/.emacs.d/blob/17959a61bb18758f55eb27b3520d173d69346353/lisp/setup-windows.el][here]]
 #+begin_src emacs-lisp
-  (use-package popper
-    :ensure t
-    :bind (("C-ù" . popper-toggle)
-           ("M-ù" .  popper-cycle)
-           ("C-M-ù" . popper-toggle-type))
-    :init
-    (setq popper-window-height 12)
-    (setq popper-reference-buffers
-        '("\\*Messages\\*"
-          "Output\\*$"
-          "\\*Async Shell Command\\*"
-          help-mode
-          compilation-mode
-          "^\\*eshell.*\\*$" eshell-mode
-          "^\\*vterm.*\\*" vterm-mode
-          "^\\*Python\\*"
-          "^\\*julia\\*"))
-    (popper-mode +1)
-    (popper-echo-mode +1))
+  (defun buffer-mode (&optional buffer-or-name)
+    "Returns the major mode associated with a buffer.
+  If buffer-or-name is nil return current buffer's mode."
+    (buffer-local-value 'major-mode
+                        (if buffer-or-name
+                            (get-buffer buffer-or-name)
+                          (current-buffer))))
+
+  (defvar gpltr/repl-names-list
+    '("^\\*Python.*\\*$"
+      "\\*julia.*\\*"
+      "^\\*edebug.*\\*$"
+      "^\\*vterm.*\\*$")
+    "List of buffer names used in REPL buffers")
+
+  (defvar gpltr/help-modes-list
+    '(helpful-mode
+      help-mode
+      pydoc-mode
+      eldoc-mode
+      TeX-special-mode)
+    "List of major-modes used in documentation buffers")
+
+  (defvar gpltr/occur-grep-modes-list
+    '(occur-mode
+      grep-mode
+      xref--xref-buffer-mode
+      locate-mode
+      flymake-diagnostics-buffer-mode)
+    "List of major-modes used in occur-type buffers")
+
+  (defvar gpltr/message-names-list
+    '("\\*\\(?:Warnings\\|Compile-Log\\|Messages\\)\\*"
+      "[Oo]utput\\*"
+      "\\*Async Shell Command\\*")
+    "List of buffer names used in message buffers")
+
+  ;; Occur type buffers on the top
+  (setq display-buffer-alist
+        '(
+  	((lambda (buf act) (member (buffer-mode buf) gpltr/occur-grep-modes-list))
+  	 (display-buffer-reuse-mode-window
+  	  display-buffer-in-direction
+  	  display-buffer-in-side-window)
+  	 (side . top)
+  	 (slot . 5)
+  	 (window-height . (lambda (win) (fit-window-to-buffer win 20 10)))
+  	 (direction . above)
+  	 (body-function . select-window))
+
+  	;; Message buffers on the bottom
+  	((lambda (buf act) (seq-some (lambda (regex) (string-match-p regex buf)) gpltr/message-names-list))
+  	 (display-buffer-at-bottom display-buffer-in-side-window)
+  	 (window-height . 0.25)
+  	 (side . bottom)
+  	 (slot . -6))
+
+  	;; REPL type buffer at the right
+  	((lambda (buf act) (seq-some (lambda (regex) (string-match-p regex buf)) gpltr/repl-names-list))
+  	 (display-buffer-reuse-window
+  	  display-buffer-in-side-window)
+  	 (body-function . select-window)
+  	 ;; display-buffer-at-left
+  	 (window-width .  .40)
+  	 ;; (preserve-size . (nil . t))
+  	 (side . right)
+  	 (slot . 1))
+
+  	;; Help type buffer at the right
+  	((lambda (buf act) (member (buffer-mode buf) gpltr/help-modes-list))
+  	 (display-buffer-reuse-window
+  	  display-buffer-in-side-window)
+  	 (body-function . select-window)
+  	 ;; display-buffer-at-left
+  	 (window-width .  .40)
+  	 ;; (preserve-size . (nil . t))
+  	 (side . right)
+  	 (slot . 2))
+
+        ;; julia-doc buffer (as it does not have a specific mode)
+        ("\\*julia-doc\\*"
+         (display-buffer-reuse-window
+  	display-buffer-in-side-window)
+         (body-function . select-window)
+         ;; display-buffer-at-left
+         (window-width .  .40)
+         ;; (preserve-size . (nil . t))
+         (side . right)
+         (slot . 2))))
+#+end_src
+
+#+begin_src emacs-lisp
+    (use-package popper
+      :ensure t
+      :bind (("C-ù" . popper-toggle)
+             ("M-ù" .  popper-cycle)
+             ("C-M-ù" . popper-toggle-type))
+
+      :init
+      (setq popper-reference-buffers
+    	'("\\*Messages\\*"
+    	  "Output\\*$"
+    	  "\\*Async Shell Command\\*"
+    	  help-mode
+    	  compilation-mode
+    	  "^\\*eshell.*\\*$" eshell-mode
+    	  "^\\*vterm.*\\*" vterm-mode
+    	  "^\\*Python.*\\*"
+    	  "\\*julia.*\\*"
+    	  "^\\*eldoc\\*"
+    	  "^\\*gud-run\\*"))
+      (setq popper-display-control nil)
+      (popper-mode +1)
+      (popper-echo-mode +1))
 #+end_src
 
 * Org Mode
@@ -385,7 +482,10 @@ Set up Org Mode with a baseline configuration. The following sections will add m
       '((shell . t)
         (gnuplot . t)
         (python . t)
-        (emacs-lisp . t))))
+        (emacs-lisp . t)
+        (julia-vterm . t)))
+    (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
+    (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm))
 
   ;; Center org document
   (use-package olivetti
@@ -416,7 +516,8 @@ These templates enable you to type things like <el and then hit =tab= to expand 
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
     (add-to-list 'org-structure-template-alist '("py" . "src python"))
     (add-to-list 'org-structure-template-alist '("yaml" . "src yaml"))
-    (add-to-list 'org-structure-template-alist '("json" . "src json")))
+    (add-to-list 'org-structure-template-alist '("json" . "src json"))
+    (add-to-list 'org-structure-template-alist '("julia" . "src julia")))
 #+end_src
 
 ** Fonts and Bullets
@@ -461,22 +562,6 @@ Notion supports Github Markdown syntax so to export orgmode text to it I need a 
 #+end_src
 
 * LLM
-
-The api key is define in =~/.authinfo=
-#+begin_src emacs-lisp
-  (use-package gptel
-    :ensure t
-    :bind (("C-c g" . gptel-menu))
-    :config
-    (setq
-     gptel-default-mode 'org-mode
-     gptel-model 'claude-3-5-sonnet-20240620
-     gptel-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)))
-#+end_src
-
-* WIP
-
-** LLM for spelling and grammar
 
 To have inline diff I followed: https://github.com/karthink/gptel/wiki/gptel%E2%80%90rewrite-addons
 
@@ -541,6 +626,8 @@ The api key is define in =~/.authinfo=
   				     :name "web_search"
   				     :max_uses 5)] result)))))))
 #+end_src
+
+* WIP
 
 ** Everywhere
 *** Launch daemon
@@ -698,7 +785,30 @@ It adds the hide button for src and heddings.
 
 ** Python
 
-Completion
+For python I use ~uv~ to handle the python version and virtual env.
+#+begin_src emacs-lisp
+  (use-package python
+    :config
+    (setq python-cmd "uv run python")
+    (setq gud-pdb-command-name "uv run python -m pdb")
+    (defun python-shell-calculate-command () (format "%s %s" python-cmd python-shell-interpreter-args)))
+#+end_src
+
+*** LSP
+#+begin_src emacs-lisp
+  (use-package eglot
+    :ensure t
+    :hook ((python-mode . eglot-ensure)
+  	 (python-ts-mode . eglot-ensure))
+    :config
+    (setq eldoc-echo-area-use-multiline-p nil)
+    (add-to-list 'eglot-server-programs
+                 `((python-mode python-ts-mode)
+  		 . ,(eglot-alternatives '(("uv" "run" "--with" "python-lsp-ruff" "pylsp"))))))
+#+end_src
+
+
+*** Completion
 #+begin_src emacs-lisp
   (use-package corfu
     :ensure t
@@ -720,19 +830,33 @@ Completion
     (define-key corfu-map (kbd "M-n") #'corfu-popupinfo-scroll-up))  ;; corfu-previous
 #+end_src
 
-LSP
-#+begin_src emacs-lisp
-  (use-package eglot
-    :ensure t
-    :hook ((python-mode . eglot-ensure)
-  	 (python-ts-mode . eglot-ensure))
-    :config
-    (add-to-list 'eglot-server-programs
-                 `((python-mode python-ts-mode)
-  		 . ,(eglot-alternatives '(("uv" "run" "--with" "python-lsp-ruff" "pylsp"))))))
-#+end_src
+** Ediff
 
 #+begin_src emacs-lisp
-  (setq python-cmd "uv run python")
-  (defun python-shell-calculate-command () (format "%s %s" python-cmd python-shell-interpreter-args))
+  (use-package ediff
+    :custom
+    (ediff-window-setup-function 'ediff-setup-windows-plain)
+    (ediff-diff-options "-w")
+    (ediff-split-window-function 'split-window-horizontally))
+#+end_src
+
+** Julia
+
+#+begin_src emacs-lisp
+  (setenv "JULIA_NUM_THREADS" "4")
+
+  (use-package julia-mode
+    :ensure t)
+
+  (use-package julia-vterm
+    :ensure t
+    :hook (julia-mode . julia-vterm-mode))
+
+  (use-package ob-julia-vterm
+    :ensure t)
+
+  (use-package eglot-jl
+    :ensure t
+    :config
+    (eglot-jl-init))
 #+end_src
